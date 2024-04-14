@@ -1,0 +1,94 @@
+---
+title: "Assignment 2"
+author: "Dunna Smaranya"
+format: html
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+show_col_types = FALSE
+my_data <- read.csv("unicef_indicator_1.csv")
+my_data <- read.csv("unicef_indicator_2.csv")
+#my_data <- read.csv("unicef_metadata (1).csv")
+```
+
+You can add options to executable code like this 
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(sf)
+install.packages("rnaturalearth")
+
+library(rnaturalearth)
+install.packages("rnaturalearthdata")
+
+
+library(rnaturalearthdata)
+# Assuming your data has the columns 'country', 'time_period', and 'obs_value'
+# Calculate the average observed value per country
+avg_obs_value <- my_data %>%
+  group_by(alpha_3_code) %>%
+  summarize(avg_value = mean(obs_value, na.rm = TRUE))  # Replace na.rm = TRUE if you want to ignore NA values
+# Get the world map data
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Merge the average observed values with the world map
+world_data <- world %>%
+  left_join(avg_obs_value, by = c("iso_a3" = "alpha_3_code"))
+
+```
+```{r}
+# Plot the map
+install.packages("ggplot2")
+library(ggplot2)
+
+ggplot(data = world_data) +geom_sf(aes(fill = avg_value), color = "orange") +
+  scale_fill_viridis_c(name = "Avg Obs Value", option = "C") +
+  labs(title = "Shaping a Better Tomorrow: UNICEF's Global Awareness Report") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+
+```{r}
+library(dplyr)
+
+top_10_2022_asc <- my_data %>%
+  dplyr::filter(time_period == 2022) %>%
+  dplyr::arrange(obs_value) %>%
+  dplyr::slice_min(order_by = obs_value, n = 10)
+
+# Creating the horizontal bar chart for these countries
+ggplot(top_10_2022_asc, aes(x = reorder(country, obs_value), y = obs_value)) +
+  geom_bar(stat = "identity", fill = "green") +
+  labs(x = "Country", y = "Observed Value",
+       title = "Exploring the 10 Countries with the Smallest Observed Values in 2022") +
+  theme_minimal() +
+  coord_flip()
+```
+
+
+```{r}
+# Convert time_period to factor and reorder levels
+time_period_averages$time_period <- factor(time_period_averages$time_period, levels = unique(time_period_averages$time_period))
+
+# Create a scatter plot with time_period on the y-axis and avg_obs_value on the x-axis
+ggplot(time_period_averages, aes(x = avg_obs_value, y = as.factor(time_period))) +
+  geom_point(size = 3, alpha = 0.5) +  # Adjust point size and transparency
+  labs(x = "Average Observed Value", y = "Time Period", title = "Average Observed Value by Time Period (2015 to 2022)") +
+  theme_minimal()
+
+```
+
+
+```{r}
+
+The `echo: false` option disables the printing of code (only output is displayed).
