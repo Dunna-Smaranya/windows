@@ -3,92 +3,90 @@ title: "Assignment 2"
 author: "Dunna Smaranya"
 format: html
 ---
-
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
 ```{r}
-show_col_types = FALSE
-my_data <- read.csv("unicef_indicator_1.csv")
-my_data <- read.csv("unicef_indicator_2.csv")
-#my_data <- read.csv("unicef_metadata (1).csv")
-```
-
-You can add options to executable code like this 
-
-```{r}
-library(ggplot2)
-library(dplyr)
-library(sf)
-install.packages("rnaturalearth")
-
+install.packages(rnaturalearth)
+install.packages(rnaturalearthdata)
+install.packages(sf)
+install.packages(ggplot2)
 library(rnaturalearth)
-install.packages("rnaturalearthdata")
-
-
-library(rnaturalearthdata)
-# Assuming your data has the columns 'country', 'time_period', and 'obs_value'
-# Calculate the average observed value per country
-avg_obs_value <- my_data %>%
-  group_by(alpha_3_code) %>%
-  summarize(avg_value = mean(obs_value, na.rm = TRUE))  # Replace na.rm = TRUE if you want to ignore NA values
-# Get the world map data
-world <- ne_countries(scale = "medium", returnclass = "sf")
-
-# Merge the average observed values with the world map
-world_data <- world %>%
-  left_join(avg_obs_value, by = c("iso_a3" = "alpha_3_code"))
-
-```
-```{r}
-# Plot the map
-install.packages("ggplot2")
+library(sf)
 library(ggplot2)
-
-ggplot(data = world_data) +geom_sf(aes(fill = avg_value), color = "orange") +
-  scale_fill_viridis_c(name = "Avg Obs Value", option = "C") +
-  labs(title = "Shaping a Better Tomorrow: UNICEF's Global Awareness Report") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+my_data <- read.csv("unicef_metadata.csv")
 ```
 
 
 ```{r}
-library(dplyr)
+# Assuming we are using life_expectancy_at_birth_total_years as the average observation value (avg_value)
+# and we are plotting for a specific year, let's say the most recent year in the dataset
+# Assuming df is a data frame and not a function or a different type of object
+
+# The error message suggests that 'df' is not a data frame but a function or a reserved word in R.
+# Let's try to clear any existing 'df' function and assume that 'df' is a data frame provided for this task.
+current_names <- colnames(my_data)
+
+new_names <- gsub("[^A-Za-z0-9]+", "_", current_names)
+
+colnames(my_data) <- new_names
+# Now, let's try to get the most recent year again
+selected_year <- my_data[my_data$year == max(my_data$year, na.rm = TRUE), ]
+
+selected_data <- my_data[my_data$year == selected_year, ]
+# Load world countries with 'ne_countries' from rnaturalearth
+world_map <- ne_countries(scale = "medium", type = 'countries', returnclass = "sf")
+
+# Merge your data
+map_data <- merge(world_map, my_data, by.x = "iso_a3", by.y = "alpha_3_code", all.x = TRUE)
+
+# Plot the map
+ggplot(map_data) +
+  geom_sf(aes(fill = Life_expectancy_at_birth_total_years_, geometry = geometry)) + # ensure geometry is used
+  scale_fill_gradient(name = "Life Expectancy", low = "blue", high = "red") +
+  labs(title = paste("Life Expectancy at Birth Across Countries (Year:", max(my_data$year, na.rm = TRUE), ")"),
+       fill = "Life Expectancy",
+       caption = "Source: Your Data Source") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+```{r}
+# Bar Chart 
 
 top_10_2022_asc <- my_data %>%
-  dplyr::filter(time_period == 2022) %>%
-  dplyr::arrange(obs_value) %>%
-  dplyr::slice_min(order_by = obs_value, n = 10)
+  dplyr::filter(year == 2022) %>%
+  dplyr::arrange(GDP_per_capita_constant_2015_US_) %>%
+  dplyr::slice_head(n = 10)
 
-# Creating the horizontal bar chart for these countries
-ggplot(top_10_2022_asc, aes(x = reorder(country, obs_value), y = obs_value)) +
-  geom_bar(stat = "identity", fill = "green") +
-  labs(x = "Country", y = "Observed Value",
-       title = "Exploring the 10 Countries with the Smallest Observed Values in 2022") +
+
+ggplot(top_10_2022_asc, aes(x = reorder(country, GDP_per_capita_constant_2015_US_), y = GDP_per_capita_constant_2015_US_)) +
+  geom_bar(stat = "identity", fill = "red") +
+  labs(x = "Country", y = "GDP per Capita (constant 2015 US$)",
+       title = "10 Countries with the Smallest GDP per Capita in 2022") +
   theme_minimal() +
-  coord_flip()
+coord_flip()
 ```
-
-
 ```{r}
-# Convert time_period to factor and reorder levels
-time_period_averages$time_period <- factor(time_period_averages$time_period, levels = unique(time_period_averages$time_period))
+library(ggplot2)
 
-# Create a scatter plot with time_period on the y-axis and avg_obs_value on the x-axis
-ggplot(time_period_averages, aes(x = avg_obs_value, y = as.factor(time_period))) +
-  geom_point(size = 3, alpha = 0.5) +  # Adjust point size and transparency
-  labs(x = "Average Observed Value", y = "Time Period", title = "Average Observed Value by Time Period (2015 to 2022)") +
+# Assuming we want to plot life_expectancy_at_birth_total_years vs gdp_per_capita_constant_2015_us
+scatterplot <- ggplot(my_data, aes(x = GDP_per_capita_constant_2015_US_, y = Life_expectancy_at_birth_total_years_)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  labs(x = "GDP per Capita (constant 2015 US$)", y = "Life Expectancy at Birth (years)", title = "Scatterplot with Linear Regression Line") +
   theme_minimal()
 
+# Print the scatterplot
+print(scatterplot)
+```
+```{r}
+# Time-series chart
+time_series <- ggplot(my_data, aes(x = year, y = GDP_per_capita_constant_2015_US_, group = country)) +
+  geom_line() +
+  labs(x = "Year", y = "GDP per Capita (constant 2015 US$)", title = "GDP per Capita over Time") +
+  theme_minimal()
+
+# Print the time-series chart
+print(time_series)
 ```
 
 
-```{r}
 
 The `echo: false` option disables the printing of code (only output is displayed).
