@@ -3,7 +3,6 @@
 # Title : Shaping a Better Tomorrow: UNICEF's Global Awareness Report
 # Data Story 
 # We explore the complex network of global child death rates in this extensive research, using data from UNICEF to shed light on important issues and spur global action for better child health.
-
 # Examining Inequalities
 Our research reveals striking differences in the rates of child mortality among various countries and areas. Sub-Saharan Africa becomes a focus point, facing significant issues due to some of the disturbingly high mortality rates in its member countries. These results highlight the urgent need for focused initiatives to address underlying factors, such as widespread poverty and limited access to healthcare.
 # Routes for Advancement
